@@ -345,6 +345,18 @@ def random_now():
         flash(f"Izbran je bil: {selection.person.first_name} {selection.person.last_name}.", "success")
     return redirect(url_for("index"))
 
+@app.route("/test-email")
+def test_email():
+    try:
+        send_email(
+            "aljaz.lederer@tps-imp.si",
+            "SMTP TEST – Coffe Duty",
+            "To je testni email iz Coffee Duty sistema.",
+        )
+        return "OK – Email POSLAN (če je nastavljen prav)"
+    except Exception as e:
+        return f"NAPAKA: {e}"
+
 
 # ---------- Scheduler endpoint ----------
 @app.route("/run-scheduler")
