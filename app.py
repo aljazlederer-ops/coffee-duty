@@ -426,6 +426,12 @@ def random_api():
         "person_name": f"{person.first_name} {person.last_name}"
     }
 
+@app.route("/debug-env")
+def debug_env():
+    return {
+        "scheduler_token_env": os.environ.get("SCHEDULER_TOKEN"),
+        "received_token": request.args.get("token")
+    }
 
 if __name__ == "__main__":
     with app.app_context():
