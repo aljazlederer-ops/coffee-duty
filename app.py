@@ -79,30 +79,12 @@ class Selection(db.Model):
 # Pomožne funkcije
 # --------------------------------------------------
 def send_email(to_email: str, subject: str, body: str) -> None:
-    """
-    Pošlje e-mail preko SMTP.
-    Potrebni ENV:
-      SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
-      SMTP_USE_TLS (optional, default "true")
-    """
-    host = os.environ.get("SMTP_HOST")
-    port = int(os.environ.get("SMTP_PORT", "587"))
-    user = os.environ.get("SMTP_USER")
-    password = os.environ.get("SMTP_PASSWORD")
-    use_tls = os.environ.get("SMTP_USE_TLS", "true").lower() == "true"
+    print("EMAIL DEBUG: (email sending disabled)")
+    print("TO:", to_email)
+    print("SUBJECT:", subject)
+    print("BODY:", body)
+    return
 
-    if not all([host, port, user, password]):
-        print("SMTP ni konfiguriran – email ne bo poslan.")
-        return
-
-    message = f"From: {user}\r\nTo: {to_email}\r\nSubject: {subject}\r\n\r\n{body}"
-
-    context = ssl.create_default_context()
-    with smtplib.SMTP(host, port) as server:
-        if use_tls:
-            server.starttls(context=context)
-        server.login(user, password)
-        server.sendmail(user, [to_email], message.encode("utf-8"))
 
 
 def choose_random_present_person(slot: str, source: str = "auto") -> Selection | None:
