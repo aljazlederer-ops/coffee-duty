@@ -79,12 +79,56 @@ class Selection(db.Model):
 # Pomožne funkcije
 # --------------------------------------------------
 def send_email(to_email: str, subject: str, body: str) -> None:
-    print("EMAIL DEBUG: (email sending disabled)")
+    import smtplib
+    import ssl
+    host = os.environ.get("SMTP_HOST")
+    port = int(os.environ.get("SMTP_PORT", "587"))
+    user = os.environ.get("SMTP_USER")
+    password = os.environ.get("SMTP_PASSWORD")
+    use_tls = os.environ.get("SMTP_USE_TLS", "true").lower() == "true"
+
+    print("====== SMTP DEBUG START ======")
+    print("SMTP_HOST:", host)
+    print("SMTP_PORT:", port)
+    print("SMTP_USER:", user)
+    print("SMTP_USE_TLS:", use_tls)
     print("TO:", to_email)
     print("SUBJECT:", subject)
-    print("BODY:", body)
-    return
+    print("------ EMAIL BODY ------")
+    print(body)
+    print("-------------------------")
 
+    # Če ni nastavljenih SMTP podatkov → ne pošiljamo
+    if not all([host, port, user, password]):
+        print("SMTP CONFIG ERROR – Missing environment variables.")
+        print("====== SMTP DEBUG END ======")
+        return
+
+    try:
+        context = ssl.create_default_context()
+        print("Connecting to SMTP...")
+
+        with smtplib.SMTP(host, port, timeout=20) as server:
+            server.set_debuglevel(1)  # <<< ENABLE FULL SMTP DUMP TO LOGS
+
+            if use_tls:
+                print("Issuing STARTTLS…")
+                server.starttls(context=context)
+
+            print("Logging in…")
+            server.login(user, password)
+
+            print("Sending email…")
+            message = f"From: {user}\r\nTo: {to_email}\r\nSubject: {subject}\r\n\r\n{body}"
+            server.sendmail(user, [to_email], message.encode("utf-8"))
+
+            print("EMAIL SENT OK")
+
+    except Exception as e:
+        print("SMTP EXCEPTION:")
+        print(e)
+
+    print("====== SMTP DEBUG END ======")
 
 
 def choose_random_present_person(slot: str, source: str = "auto") -> Selection | None:
