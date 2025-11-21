@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="sl">
+<head>
+    <style>
+    @keyframes pop {
+        0% { transform: scale(0.95); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+        animation: pop 0.25s ease-out forwards;
+    }
+    </style>
+
+    <style>
+
+    .coffee-badge {
+        @apply flex items-center justify-center rounded-full shadow-sm border;
+        background-color: #f4e7d6;   /* nežna beige */
+        border-color: #d3c2a8;       /* svetlo rjava */
+    }
+
+    /* Izbirne velikosti */
+    .badge-sm { @apply w-6 h-6; }
+    .badge-md { @apply w-8 h-8; }
+    .badge-lg { @apply w-10 h-10; }
+
+    /* Ikona znotraj ostane v razmerju – ti jo kontroliraš s Tailwind razredi */
+    .coffee-badge img {
+        @apply object-contain;
+    }
+
+    </style>
+
+
+    <meta charset="utf-8">
+    <title>Dežurni za kavo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ikone -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <!-- Chart.js za graf -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #F9FAFB;
+        }
+
+        /* card helper razred za kartice */
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.08);
+            border: 1px solid #E5E7EB;
+        }
+
+        /* animacija modalov */
+        .modal-panel {
+            animation: modalFade 0.15s ease-out forwards, modalScale 0.15s ease-out forwards;
+        }
+        @keyframes modalFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modalScale {
+            from { transform: scale(0.95); }
+            to   { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<nav class="bg-white shadow-md border-b border-gray-200 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16">
+
+      <!-- Leva stran -->
+      <div class="flex">
+        <a href="{{ url_for('index') }}" class="flex items-center space-x-2">
+          <span class="text-2xl">☕</span>
+          <span class="font-semibold text-xl">Dežurni za kavo</span>
+        </a>
+
+        <!-- Desktop menu -->
+        <div class="hidden sm:ml-10 sm:flex sm:space-x-8">
+
+          <a href="{{ url_for('index') }}"
+             class="inline-flex items-center px-1 pt-1 
+                    {% if request.endpoint=='index' %}text-orange-600 font-semibold{% else %}text-gray-600{% endif %}
+                    hover:text-orange-600 transition">
+             Domov
+          </a>
+
+          <a href="{{ url_for('people_list') }}"
+             class="inline-flex items-center px-1 pt-1 
+                    {% if 'people' in request.endpoint %}text-orange-600 font-semibold{% else %}text-gray-600{% endif %}
+                    hover:text-orange-600 transition">
+             Osebe
+          </a>
+
+          <a href="{{ url_for('coffee_types_list') }}"
+             class="inline-flex items-center px-1 pt-1 
+                    {% if 'coffee_types' in request.endpoint %}text-orange-600 font-semibold{% else %}text-gray-600{% endif %}
+                    hover:text-orange-600 transition">
+             Tipi kave
+          </a>
+
+          <a href="{{ url_for('history_list') }}"
+             class="inline-flex items-center px-1 pt-1
+                    {% if request.endpoint=='history_list' %}text-orange-600 font-semibold{% else %}text-gray-600{% endif %}
+                    hover:text-orange-600 transition">
+             Zgodovina
+          </a>
+        </div>
+      </div>
+
+      <!-- Mobile burger menu -->
+      <div class="-mr-2 flex items-center sm:hidden">
+        <button onclick="toggleMobileMenu()"
+                class="inline-flex items-center justify-center p-2 rounded-md 
+                       text-gray-600 hover:text-orange-600 hover:bg-gray-100">
+          <svg id="menu-icon" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"
+               fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" 
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Mobile menu dropdown -->
+  <div id="mobile-menu" class="sm:hidden hidden px-2 pt-2 pb-3 space-y-1">
+
+    <a href="{{ url_for('index') }}"
+       class="block px-3 py-2 rounded-md
+              {% if request.endpoint=='index' %}bg-orange-100 text-orange-600 font-semibold{% else %}text-gray-700{% endif %}">
+       Domov
+    </a>
+
+    <a href="{{ url_for('people_list') }}"
+       class="block px-3 py-2 rounded-md 
+              {% if 'people' in request.endpoint %}bg-orange-100 text-orange-600 font-semibold{% else %}text-gray-700{% endif %}">
+       Osebe
+    </a>
+
+    <a href="{{ url_for('coffee_types_list') }}"
+       class="block px-3 py-2 rounded-md 
+              {% if 'coffee_types' in request.endpoint %}bg-orange-100 text-orange-600 font-semibold{% else %}text-gray-700{% endif %}">
+       Tipi kave
+    </a>
+
+    <a href="{{ url_for('history_list') }}"
+       class="block px-3 py-2 rounded-md 
+              {% if request.endpoint=='history_list' %}bg-orange-100 text-orange-600 font-semibold{% else %}text-gray-700{% endif %}">
+       Zgodovina
+    </a>
+  </div>
+
+</nav>
+
+<!-- Flash messages -->
+<div class="max-w-7xl mx-auto px-4 mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="p-4 rounded-lg mb-3
+                      {% if category=='success' %}bg-green-100 text-green-700
+                      {% elif category=='danger' %}bg-red-100 text-red-700
+                      {% elif category=='warning' %}bg-yellow-100 text-yellow-700
+                      {% else %}bg-blue-100 text-blue-700{% endif %}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+</div>
+
+<!-- page content -->
+<div class="max-w-7xl mx-auto px-4 mt-6 mb-10">
+    {% block content %}{% endblock %}
+</div>
+
+<script>
+function toggleMobileMenu() {
+    const el = document.getElementById('mobile-menu');
+    el.classList.toggle('hidden');
+}
+feather.replace();
+</script>
+
+</body>
+</html>
