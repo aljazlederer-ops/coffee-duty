@@ -4,6 +4,9 @@ from datetime import datetime
 import json
 import base64
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "coffee_duty.db")
+
 from flask import (
     Flask, render_template, request,
     redirect, url_for, flash, abort
@@ -21,10 +24,7 @@ from google.auth.transport.requests import Request as GoogleRequest
 # --------------------------------------------------
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL",
-    "sqlite:///coffee_duty.db"
-)
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -645,6 +645,11 @@ def init_db():
     db.create_all()
     print("Baza inicializirana.")
 
+@app.route("/_init_db_once")
+def init_db_once():
+    with app.app_context():
+        db.create_all()
+    return "Database initialized."
 
 if __name__ == "__main__":
     with app.app_context():
