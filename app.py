@@ -471,6 +471,32 @@ def debug_env():
         "received_token": request.args.get("token")
     }
 
+from flask import request, redirect
+import requests
+import os
+
+@app.route("/oauth2callback")
+def oauth2callback():
+    code = request.args.get("code")
+
+    if not code:
+        return "Error: Missing code", 400
+
+    # Exchange code → access token
+    token_url = "https://oauth2.googleapis.com/token"
+    data = {
+        "code": code,
+        "client_id": os.environ["GMAIL_CLIENT_ID"],
+        "client_secret": os.environ["GMAIL_CLIENT_SECRET"],
+        "redirect_uri": "https://coffee-duty.onrender.com/oauth2callback",
+        "grant_type": "authorization_code"
+    }
+
+    r = requests.post(token_url, data=data)
+    token_response = r.json()
+
+    return token_response  # samo za test
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
