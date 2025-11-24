@@ -11,9 +11,10 @@ from flask import (
 from flask_sqlalchemy import SQLAlchemy
 
 import requests
-from email.mime.text import MIMEText   # <-- POPRAVEK TUKAJ
+from email.mime.text import MIMEText
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from google.auth.transport.requests import Request as GoogleRequest
 
 # --------------------------------------------------
 # Konfiguracija aplikacije
@@ -143,6 +144,9 @@ def _get_gmail_credentials() -> Credentials | None:
 
 def _save_gmail_credentials(creds: Credentials) -> None:
     """Shrani (osvežen) token nazaj v bazo."""
+    if not creds:
+        return
+
     data = {
         "token": creds.token,
         "refresh_token": creds.refresh_token,
@@ -168,6 +172,15 @@ def send_email(to_email: str, subject: str, body: str) -> None:
         print("Ni Gmail credentials – email ne bo poslan.")
         print("====== GMAIL API DEBUG END ======")
         return
+
+    # Po potrebi osveži access token
+    try:
+        if creds.expired and creds.refresh_token:
+            print("Access token je potekel – osvežujem...")
+            creds.refresh(GoogleRequest())
+            _save_gmail_credentials(creds)
+    except Exception as e:
+        print("NAPAKA pri osvežitvi tokena:", e)
 
     # Ustvari Gmail service
     service = build("gmail", "v1", credentials=creds)
@@ -536,6 +549,7 @@ def debug_env():
         "received_token": request.args.get("token"),
     }
 
+
 # ---------- Gmail OAuth – začetek ----------
 @app.route("/authorize-gmail")
 def authorize_gmail():
@@ -543,7 +557,7 @@ def authorize_gmail():
     Ročno sprožiš Gmail OAuth flow.
     Pokličeš: https://coffee-duty.onrender.com/authorize-gmail
     """
-    from urllib.parse import urlencode, quote_plus
+    from urllib.parse import urlencode
 
     client_id = os.environ["GMAIL_CLIENT_ID"]
     redirect_uri = os.environ.get(
@@ -561,11 +575,10 @@ def authorize_gmail():
         "include_granted_scopes": "true",
     }
 
-    # 🔥 redirect_uri mora biti obvezno URL-encoded
-    params["redirect_uri"] = quote_plus(redirect_uri)
-
-    # 🔥 scope mora biti prav tako encoded
-    return redirect("https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params))
+    # urlencode bo sam pravilno encodal parametre
+    url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
+    print("GMAIL OAUTH AUTHORIZE URL:", url)
+    return redirect(url)
 
 
 @app.route("/oauth2callback")
@@ -574,7 +587,7 @@ def oauth2callback():
     Google pokliče ta endpoint po uspešnem loginu.
     Tu zamenjamo 'code' za token in ga shranimo v bazo.
     """
-    from urllib.parse import quote_plus
+    print("OAUTH2CALLBACK QUERY PARAMS:", dict(request.args))
 
     error = request.args.get("error")
     if error:
@@ -582,18 +595,15 @@ def oauth2callback():
 
     code = request.args.get("code")
     if not code:
-        return "Error: Missing code", 400
+        # Če prideš na ta URL ročno (brez Google redirecta), bo tu brez code
+        return f"Error: Missing code. Query params: {dict(request.args)}", 400
 
     client_id = os.environ["GMAIL_CLIENT_ID"]
     client_secret = os.environ["GMAIL_CLIENT_SECRET"]
-
-    redirect_uri_raw = os.environ.get(
+    redirect_uri = os.environ.get(
         "GMAIL_REDIRECT_URI",
         "https://coffee-duty.onrender.com/oauth2callback",
     )
-
-    # 🔥 Za token exchange redirect_uri ne sme biti encoded
-    redirect_uri = redirect_uri_raw
 
     token_url = "https://oauth2.googleapis.com/token"
     data = {
@@ -606,6 +616,7 @@ def oauth2callback():
 
     r = requests.post(token_url, data=data)
     token_response = r.json()
+    print("TOKEN RESPONSE:", token_response)
 
     if "error" in token_response:
         return f"Token error: {token_response}", 400
