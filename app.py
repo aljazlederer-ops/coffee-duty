@@ -11,7 +11,7 @@ from flask import (
 from flask_sqlalchemy import SQLAlchemy
 
 import requests
-from email.mime.text import MIMEText
+from email.mime_text import MIMEText
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
@@ -186,7 +186,7 @@ def send_email(to_email: str, subject: str, body: str) -> None:
     except Exception as e:
         print("GMAIL API EXCEPTION:", e)
     finally:
-        # Če je bil dostopni token osvežen, ga shranimo
+        # Če bi se token osvežil, bi bil tu že posodobljen
         _save_gmail_credentials(creds)
 
     print("====== GMAIL API DEBUG END ======")
@@ -565,25 +565,6 @@ def authorize_gmail():
     url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
     return redirect(url)
 
-@app.route("/authorize-gmail")
-def authorize_gmail():
-    import urllib.parse
-
-    client_id = os.environ["GMAIL_CLIENT_ID"]
-    redirect_uri = "https://coffee-duty.onrender.com/oauth2callback"
-
-    params = {
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "response_type": "code",
-        "scope": "https://www.googleapis.com/auth/gmail.send",
-        "access_type": "offline",
-        "prompt": "consent"
-    }
-
-    auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
-    return redirect(auth_url)
-
 
 @app.route("/oauth2callback")
 def oauth2callback():
@@ -621,7 +602,7 @@ def oauth2callback():
     if "error" in token_response:
         return f"Token error: {token_response}", 400
 
-    # Sestavi strukturo za Credentials in shrani v DB
+    # Sestavi Credentials in shrani v DB
     creds = Credentials(
         token=token_response["access_token"],
         refresh_token=token_response.get("refresh_token"),
