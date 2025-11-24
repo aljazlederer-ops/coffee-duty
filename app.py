@@ -553,10 +553,6 @@ def debug_env():
 # ---------- Gmail OAuth – začetek ----------
 @app.route("/authorize-gmail")
 def authorize_gmail():
-    """
-    Ročno sprožiš Gmail OAuth flow.
-    Pokličeš: https://coffee-duty.onrender.com/authorize-gmail
-    """
     from urllib.parse import urlencode
 
     client_id = os.environ["GMAIL_CLIENT_ID"]
@@ -565,9 +561,10 @@ def authorize_gmail():
         "https://coffee-duty.onrender.com/oauth2callback",
     )
 
+    # PARAMETRI BREZ MANUAL ENCODE!!!
     params = {
         "client_id": client_id,
-        "redirect_uri": redirect_uri,
+        "redirect_uri": redirect_uri,   # <-- NE encodeaj!!!
         "response_type": "code",
         "scope": "https://www.googleapis.com/auth/gmail.send",
         "access_type": "offline",
@@ -575,10 +572,11 @@ def authorize_gmail():
         "include_granted_scopes": "true",
     }
 
-    # urlencode bo sam pravilno encodal parametre
-    url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
-    print("GMAIL OAUTH AUTHORIZE URL:", url)
-    return redirect(url)
+    # urlencode SAM naredi pravilen encode — nič ne prej!
+    oauth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
+
+    print("FINAL AUTH URL:", oauth_url)
+    return redirect(oauth_url)
 
 
 @app.route("/oauth2callback")
