@@ -11,7 +11,7 @@ from flask import (
 from flask_sqlalchemy import SQLAlchemy
 
 import requests
-from email.mime_text import MIMEText
+from email.mime.text import MIMEText   # <-- POPRAVEK TUKAJ
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
