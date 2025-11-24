@@ -4,9 +4,6 @@ from datetime import datetime
 import json
 import base64
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "coffee_duty.db")
-
 from flask import (
     Flask, render_template, request,
     redirect, url_for, flash, abort
@@ -20,11 +17,19 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request as GoogleRequest
 
 # --------------------------------------------------
-# Konfiguracija aplikacije
+# Konfiguracija aplikacije in baze
 # --------------------------------------------------
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+
+# Render: stabilna pot za SQLite datoteko
+DEFAULT_DB_PATH = "/opt/render/project/src/coffee_duty.db"
+
+# Če bi kdaj želel uporabiti drugo bazo, lahko nastaviš DATABASE_URL v ENV
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URL",
+    f"sqlite:///{DEFAULT_DB_PATH}"
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -561,10 +566,9 @@ def authorize_gmail():
         "https://coffee-duty.onrender.com/oauth2callback",
     )
 
-    # PARAMETRI BREZ MANUAL ENCODE!!!
     params = {
         "client_id": client_id,
-        "redirect_uri": redirect_uri,   # <-- NE encodeaj!!!
+        "redirect_uri": redirect_uri,
         "response_type": "code",
         "scope": "https://www.googleapis.com/auth/gmail.send",
         "access_type": "offline",
@@ -572,7 +576,6 @@ def authorize_gmail():
         "include_granted_scopes": "true",
     }
 
-    # urlencode SAM naredi pravilen encode — nič ne prej!
     oauth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
 
     print("FINAL AUTH URL:", oauth_url)
@@ -593,7 +596,6 @@ def oauth2callback():
 
     code = request.args.get("code")
     if not code:
-        # Če prideš na ta URL ročno (brez Google redirecta), bo tu brez code
         return f"Error: Missing code. Query params: {dict(request.args)}", 400
 
     client_id = os.environ["GMAIL_CLIENT_ID"]
@@ -637,7 +639,7 @@ def oauth2callback():
 
 
 # --------------------------------------------------
-# Inicializacija baze
+# Inicializacija baze – CLI in debug endpointi
 # --------------------------------------------------
 @app.cli.command("init-db")
 def init_db():
@@ -645,11 +647,13 @@ def init_db():
     db.create_all()
     print("Baza inicializirana.")
 
+
 @app.route("/__init_again")
 def init_again():
     with app.app_context():
         db.create_all()
     return "DB recreated"
+
 
 @app.route("/__debug_tables")
 def debug_tables():
