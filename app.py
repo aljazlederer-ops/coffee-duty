@@ -565,6 +565,25 @@ def authorize_gmail():
     url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
     return redirect(url)
 
+@app.route("/authorize-gmail")
+def authorize_gmail():
+    import urllib.parse
+
+    client_id = os.environ["GMAIL_CLIENT_ID"]
+    redirect_uri = "https://coffee-duty.onrender.com/oauth2callback"
+
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "https://www.googleapis.com/auth/gmail.send",
+        "access_type": "offline",
+        "prompt": "consent"
+    }
+
+    auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
+    return redirect(auth_url)
+
 
 @app.route("/oauth2callback")
 def oauth2callback():
