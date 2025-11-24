@@ -645,11 +645,6 @@ def init_db():
     db.create_all()
     print("Baza inicializirana.")
 
-@app.route("/_init_db_once")
-def init_db_once():
-    with app.app_context():
-        db.create_all()
-    return "Database initialized."
 
 if __name__ == "__main__":
     with app.app_context():
