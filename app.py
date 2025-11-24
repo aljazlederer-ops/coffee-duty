@@ -651,6 +651,13 @@ def init_again():
         db.create_all()
     return "DB recreated"
 
+@app.route("/__debug_tables")
+def debug_tables():
+    from sqlalchemy import inspect
+    inspector = inspect(db.engine)
+    return {"tables": inspector.get_table_names()}
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
