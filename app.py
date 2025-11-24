@@ -627,59 +627,6 @@ def oauth2callback():
     )
 
 
-@app.route("/oauth2callback")
-def oauth2callback():
-    """
-    Google pokliče ta endpoint po uspešnem loginu.
-    Tu zamenjamo 'code' za token in ga shranimo v bazo.
-    """
-    error = request.args.get("error")
-    if error:
-        return f"Error from Google OAuth: {error}", 400
-
-    code = request.args.get("code")
-    if not code:
-        return "Error: Missing code", 400
-
-    client_id = os.environ["GMAIL_CLIENT_ID"]
-    client_secret = os.environ["GMAIL_CLIENT_SECRET"]
-    redirect_uri = os.environ.get(
-        "GMAIL_REDIRECT_URI",
-        "https://coffee-duty.onrender.com/oauth2callback",
-    )
-
-    token_url = "https://oauth2.googleapis.com/token"
-    data = {
-        "code": code,
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "redirect_uri": redirect_uri,
-        "grant_type": "authorization_code",
-    }
-
-    r = requests.post(token_url, data=data)
-    token_response = r.json()
-
-    if "error" in token_response:
-        return f"Token error: {token_response}", 400
-
-    # Sestavi Credentials in shrani v DB
-    creds = Credentials(
-        token=token_response["access_token"],
-        refresh_token=token_response.get("refresh_token"),
-        token_uri=token_url,
-        client_id=client_id,
-        client_secret=client_secret,
-        scopes=["https://www.googleapis.com/auth/gmail.send"],
-    )
-    _save_gmail_credentials(creds)
-
-    return (
-        "Gmail pošiljanje je uspešno nastavljeno. "
-        "Lahko zapreš to okno in se vrneš v Coffee Duty."
-    )
-
-
 # --------------------------------------------------
 # Inicializacija baze
 # --------------------------------------------------
