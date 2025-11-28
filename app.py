@@ -790,7 +790,7 @@ def send_email_custom(selection_id):
 # --------------------------------------------------
 # BRISANJE STATISTIKE (RESET)
 # --------------------------------------------------
-@app.route("/stats/reset", methods=["POST"])
+@app.route("/reset-statistics", methods=["POST"])
 def stats_reset():
     Selection.query.filter_by(source="auto").delete()
     db.session.commit()
