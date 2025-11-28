@@ -19,12 +19,3 @@ services:
         sync: false
       - key: ADMIN_TOKEN
         sync: false
-
-jobs:
-  - type: cron
-    name: coffee-duty-scheduler
-    schedule: "15 8,13 * * 1-5"
-    command: "curl https://YOUR-RENDER-URL/run-auto?scheduler=$SCHEDULER_TOKEN"
-    envVars:
-      - key: SCHEDULER_TOKEN
-        sync: false
