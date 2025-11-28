@@ -106,13 +106,6 @@
                     hover:text-orange-600 transition">
              Tipi kave
           </a>
-
-          <a href="{{ url_for('history_list') }}"
-             class="inline-flex items-center px-1 pt-1
-                    {% if request.endpoint=='history_list' %}text-orange-600 font-semibold{% else %}text-gray-600{% endif %}
-                    hover:text-orange-600 transition">
-             Zgodovina
-          </a>
         </div>
       </div>
 
@@ -152,12 +145,6 @@
        class="block px-3 py-2 rounded-md 
               {% if 'coffee_types' in request.endpoint %}bg-orange-100 text-orange-600 font-semibold{% else %}text-gray-700{% endif %}">
        Tipi kave
-    </a>
-
-    <a href="{{ url_for('history_list') }}"
-       class="block px-3 py-2 rounded-md 
-              {% if request.endpoint=='history_list' %}bg-orange-100 text-orange-600 font-semibold{% else %}text-gray-700{% endif %}">
-       Zgodovina
     </a>
   </div>
 
