@@ -3,19 +3,6 @@ services:
     name: coffee-duty
     env: python
     region: frankfurt
-    plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
-    envVars:
-      - key: GMAIL_CLIENT_ID
-        sync: false
-      - key: GMAIL_CLIENT_SECRET
-        sync: false
-      - key: GMAIL_REDIRECT_URI
-        sync: false
-      - key: SECRET_KEY
-        sync: false
-      - key: SCHEDULER_TOKEN
-        sync: false
-      - key: ADMIN_TOKEN
-        sync: false
+    startCommand: "gunicorn --chdir src app:app"
+    plan: free
