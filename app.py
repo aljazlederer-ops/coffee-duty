@@ -564,51 +564,75 @@ def random_selection():
 # --------------------------------------------------
 @app.route("/")
 def index():
-    people = Person.query.order_by(Person.first_name).all()
-    coffee_types = CoffeeType.query.order_by(CoffeeType.name).all()
-    last_selection = Selection.query.order_by(Selection.selected_at.desc()).first()
+    # --------------------------------------------------
+    # READ SETTINGS
+    # --------------------------------------------------
+    auto_enabled = get_setting("automation_enabled") == "1"
 
-    # Prisotnost
-    present_count = Person.query.filter_by(is_present=True, active=True).count()
+    # --------------------------------------------------
+    # PEOPLE LIST
+    # --------------------------------------------------
+    people = Person.query.filter_by(active=True).order_by(Person.first_name).all()
 
-    # Statistika (samo AUTO)
-    stats = compute_person_stats(only_present=False)
-    stat_labels = [s["name"] for s in stats]
-    stat_values = [s["prob"] for s in stats]  # prikazujemo verjetnosti %
-
-    # Najbolj dejaven (po št. AUTO)
-    best = None
-    if stats:
-        best = sorted(stats, key=lambda s: s["total"], reverse=True)[0]["person"]
-
-    # Najbolj priljubljena kava
-    favorite_coffee = (
-        db.session.query(CoffeeType, db.func.count(Person.id).label("cnt"))
-        .join(Person, Person.default_coffee_type_id == CoffeeType.id)
-        .group_by(CoffeeType.id)
-        .order_by(db.desc("cnt"))
+    # --------------------------------------------------
+    # LAST SELECTION
+    # --------------------------------------------------
+    last_sel = (
+        Selection.query
+        .order_by(Selection.selected_at.desc())
         .first()
     )
-    favorite_coffee = favorite_coffee[0] if favorite_coffee else None
 
-    # Naslednji auto-run
-    next_auto_run = compute_next_auto_run_dynamic()
+    # --------------------------------------------------
+    # NEXT AUTO RUN TIME
+    # --------------------------------------------------
+    def get_next_auto_run():
+        now = datetime.now()
 
+        morning = now.replace(hour=8, minute=15, second=0, microsecond=0)
+        afternoon = now.replace(hour=13, minute=15, second=0, microsecond=0)
+
+        if now < morning:
+            return morning
+        elif now < afternoon:
+            return afternoon
+        else:
+            # tomorrow morning
+            return (now + timedelta(days=1)).replace(hour=8, minute=15, second=0, microsecond=0)
+
+    next_auto_run = get_next_auto_run()
+
+    # --------------------------------------------------
+    # PERSON STATS (robustno!)
+    # --------------------------------------------------
+    try:
+        person_stats = compute_person_stats() or []
+    except Exception as e:
+        print("STATS ERROR:", e)
+        person_stats = []
+
+    # Build chart data safely
+    chart_labels = []
+    chart_values = []
+
+    if person_stats:
+        chart_labels = [s["name"] for s in person_stats]
+        chart_values = [s["total"] for s in person_stats]
+
+    # --------------------------------------------------
+    # RENDER TEMPLATE
+    # --------------------------------------------------
     return render_template(
         "index.html",
         people=people,
-        coffee_types=coffee_types,
-        last_selection=last_selection,
-        present_count=present_count,
-        best_person=best,
-        favorite_coffee=favorite_coffee,
-        automation_enabled=is_automation_enabled(),
-        gmail_connected=is_gmail_connected(),
-        stats=stats,
-        stat_labels=stat_labels,
-        stat_values=stat_values,
+        last_sel=last_sel,
+        auto_enabled=auto_enabled,
         next_auto_run=next_auto_run,
+        person_stats=person_stats,
+        chart_labels=chart_labels,
+        chart_values=chart_values,
     )
+
 # --------------------------------------------------
 # PEOPLE – LIST + CRUD
 # --------------------------------------------------
