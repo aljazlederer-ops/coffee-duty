@@ -564,74 +564,47 @@ def random_selection():
 # --------------------------------------------------
 @app.route("/")
 def index():
-    # --------------------------------------------------
-    # READ SETTINGS
-    # --------------------------------------------------
     auto_enabled = get_setting("automation_enabled") == "1"
 
-    # --------------------------------------------------
-    # PEOPLE LIST
-    # --------------------------------------------------
+    # People
     people = Person.query.filter_by(active=True).order_by(Person.first_name).all()
+    present_count = Person.query.filter_by(active=True, is_present=True).count()
 
-    # --------------------------------------------------
-    # LAST SELECTION
-    # --------------------------------------------------
-    last_sel = (
-        Selection.query
-        .order_by(Selection.selected_at.desc())
-        .first()
+    # Last selection
+    last_selection = (
+        Selection.query.order_by(Selection.selected_at.desc()).first()
     )
 
-    # --------------------------------------------------
-    # NEXT AUTO RUN TIME
-    # --------------------------------------------------
-    def get_next_auto_run():
-        now = datetime.now()
+    # Next auto run
+    next_auto_run = compute_next_auto_run_dynamic()
 
-        morning = now.replace(hour=8, minute=15, second=0, microsecond=0)
-        afternoon = now.replace(hour=13, minute=15, second=0, microsecond=0)
-
-        if now < morning:
-            return morning
-        elif now < afternoon:
-            return afternoon
-        else:
-            # tomorrow morning
-            return (now + timedelta(days=1)).replace(hour=8, minute=15, second=0, microsecond=0)
-
-    next_auto_run = get_next_auto_run()
-
-    # --------------------------------------------------
-    # PERSON STATS (robustno!)
-    # --------------------------------------------------
+    # Person stats
     try:
         person_stats = compute_person_stats() or []
     except Exception as e:
         print("STATS ERROR:", e)
         person_stats = []
 
-    # Build chart data safely
-    chart_labels = []
-    chart_values = []
+    # ----- GRAF DATA -----
+    chart_labels = [s["name"] for s in person_stats]
+    chart_counts = [s["total"] for s in person_stats]
+    chart_days = [s["days_since"] for s in person_stats]
+    chart_weights = [s["weight"] for s in person_stats]
 
-    if person_stats:
-        chart_labels = [s["name"] for s in person_stats]
-        chart_values = [s["total"] for s in person_stats]
-
-    # --------------------------------------------------
-    # RENDER TEMPLATE
-    # --------------------------------------------------
     return render_template(
         "index.html",
         people=people,
-        last_sel=last_sel,
+        last_selection=last_selection,
+        present_count=present_count,
         auto_enabled=auto_enabled,
         next_auto_run=next_auto_run,
+
         person_stats=person_stats,
+
         chart_labels=chart_labels,
-        chart_values=chart_values,
         chart_counts=chart_counts,
+        chart_days=chart_days,
+        chart_weights=chart_weights,
     )
 
 # --------------------------------------------------
