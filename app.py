@@ -26,6 +26,7 @@ from google.auth.transport.requests import Request as GoogleRequest
 # --------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "coffee_duty.db")
+SCHEDULER_TOKEN = os.environ.get("SCHEDULER_TOKEN")
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")
 
 app = Flask(__name__)
@@ -701,11 +702,15 @@ def random_selection():
 
 @app.route("/run-auto")
 def run_auto():
-    if request.args.get("admin") != ADMIN_TOKEN:
+    token_admin = request.args.get("admin")
+    token_scheduler = request.args.get("scheduler")
+
+    # dovoli oba načina
+    if token_admin != ADMIN_TOKEN and token_scheduler != SCHEDULER_TOKEN:
         abort(403)
 
     ok, msg = run_auto_selection()
-    return msg  # simple response
+    return msg
 
 # --------------------------------------------------
 # POŠILJANJE EMAILA – hitri trigger

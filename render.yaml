@@ -3,6 +3,27 @@ services:
     name: coffee-duty
     env: python
     region: frankfurt
+    plan: free
     buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn app:app"
-    plan: free
+    envVars:
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REDIRECT_URI
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: SCHEDULER_TOKEN
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+
+  - type: cron
+    name: coffee-duty-scheduler
+    schedule: "15 8,13 * * 1-5"
+    command: "curl https://YOUR-RENDER-URL/run-auto?scheduler=$SCHEDULER_TOKEN"
+    envVars:
+      - key: SCHEDULER_TOKEN
+        sync: false
