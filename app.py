@@ -38,18 +38,17 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
+# --------------------------------------------------
+# INITIALIZE DATABASE (Flask 3 compatible)
+# --------------------------------------------------
+with app.app_context():
+    db.create_all()
+    
 # Gmail OAuth ENV spremenljivke
 GMAIL_CLIENT_ID = os.environ.get("GMAIL_CLIENT_ID")
 GMAIL_CLIENT_SECRET = os.environ.get("GMAIL_CLIENT_SECRET")
 GMAIL_REDIRECT_URI = os.environ.get("GMAIL_REDIRECT_URI")
 GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
-
-# --------------------------------------------------
-# AUTO INIT DATABASE
-# --------------------------------------------------
-@app.before_first_request
-def initialize_database():
-    db.create_all()
 
 # --------------------------------------------------
 # MODELI
