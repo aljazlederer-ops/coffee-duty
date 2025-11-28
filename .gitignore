@@ -5,8 +5,9 @@ __pycache__/
 # Virtual env
 venv/
 
-# Flask instance folder
-instance/
+# Flask instance folder (ignore database inside it)
+instance/*.db
+instance/*.sqlite
 
 # Local SQLite DB
 *.db
