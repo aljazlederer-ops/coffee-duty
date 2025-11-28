@@ -600,7 +600,7 @@ def index():
         present_count=present_count,
         auto_enabled=auto_enabled,
         next_auto_run=next_auto_run,
-
+        automation_enabled=is_automation_enabled(),
         person_stats=person_stats,
 
         chart_labels=chart_labels,
