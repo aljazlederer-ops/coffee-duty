@@ -631,6 +631,7 @@ def index():
         person_stats=person_stats,
         chart_labels=chart_labels,
         chart_values=chart_values,
+        chart_counts=chart_counts,
     )
 
 # --------------------------------------------------
