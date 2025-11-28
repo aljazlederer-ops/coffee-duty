@@ -1,3 +1,14 @@
+import logging
+logging.basicConfig(level=logging.INFO)
+
+with app.app_context():
+    try:
+        db.create_all()
+        logging.info("✅ Database created or already exists")
+    except Exception as e:
+        logging.error("❌ Database initialization failed", exc_info=e)
+
+
 import os
 os.makedirs("instance", exist_ok=True)
 
