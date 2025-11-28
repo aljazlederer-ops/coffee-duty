@@ -49,12 +49,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-# --------------------------------------------------
-# INITIALIZE DATABASE (Flask 3 compatible)
-# --------------------------------------------------
-with app.app_context():
-    db.create_all()
-    
+
 # Gmail OAuth ENV spremenljivke
 GMAIL_CLIENT_ID = os.environ.get("GMAIL_CLIENT_ID")
 GMAIL_CLIENT_SECRET = os.environ.get("GMAIL_CLIENT_SECRET")
@@ -112,7 +107,12 @@ class Setting(db.Model):
     key = db.Column(db.String(100), primary_key=True)
     value = db.Column(db.Text, nullable=True)
 
-
+# --------------------------------------------------
+# INITIALIZE DATABASE (Flask 3 compatible)
+# --------------------------------------------------
+with app.app_context():
+    db.create_all()
+    
 # --------------------------------------------------
 # NASTAVITVE
 # --------------------------------------------------
