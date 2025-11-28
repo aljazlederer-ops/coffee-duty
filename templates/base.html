@@ -15,16 +15,14 @@
 
     .coffee-badge {
         @apply flex items-center justify-center rounded-full shadow-sm border;
-        background-color: #f4e7d6;   /* nežna beige */
-        border-color: #d3c2a8;       /* svetlo rjava */
+        background-color: #f4e7d6;
+        border-color: #d3c2a8;
     }
 
-    /* Izbirne velikosti */
     .badge-sm { @apply w-6 h-6; }
     .badge-md { @apply w-8 h-8; }
     .badge-lg { @apply w-10 h-10; }
 
-    /* Ikona znotraj ostane v razmerju – ti jo kontroliraš s Tailwind razredi */
     .coffee-badge img {
         @apply object-contain;
     }
@@ -36,11 +34,8 @@
     <title>Dežurni za kavo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Ikone -->
     <script src="https://unpkg.com/feather-icons"></script>
-    <!-- Chart.js za graf -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -48,7 +43,6 @@
             background-color: #F9FAFB;
         }
 
-        /* card helper razred za kartice */
         .card {
             background-color: #FFFFFF;
             border-radius: 0.75rem;
@@ -56,7 +50,6 @@
             border: 1px solid #E5E7EB;
         }
 
-        /* animacija modalov */
         .modal-panel {
             animation: modalFade 0.15s ease-out forwards, modalScale 0.15s ease-out forwards;
         }
@@ -83,7 +76,6 @@
           <span class="font-semibold text-xl">Dežurni za kavo</span>
         </a>
 
-        <!-- Desktop menu -->
         <div class="hidden sm:ml-10 sm:flex sm:space-x-8">
 
           <a href="{{ url_for('index') }}"
@@ -109,7 +101,7 @@
         </div>
       </div>
 
-      <!-- Mobile burger menu -->
+      <!-- Mobile burger -->
       <div class="-mr-2 flex items-center sm:hidden">
         <button onclick="toggleMobileMenu()"
                 class="inline-flex items-center justify-center p-2 rounded-md 
@@ -126,7 +118,6 @@
     </div>
   </div>
 
-  <!-- Mobile menu dropdown -->
   <div id="mobile-menu" class="sm:hidden hidden px-2 pt-2 pb-3 space-y-1">
 
     <a href="{{ url_for('index') }}"
@@ -150,7 +141,8 @@
 
 </nav>
 
-<!-- Flash messages -->
+{# Flash messages DISABLED #}
+{#
 <div class="max-w-7xl mx-auto px-4 mt-4">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -166,8 +158,8 @@
       {% endif %}
     {% endwith %}
 </div>
+#}
 
-<!-- page content -->
 <div class="max-w-7xl mx-auto px-4 mt-6 mb-10">
     {% block content %}{% endblock %}
 </div>
