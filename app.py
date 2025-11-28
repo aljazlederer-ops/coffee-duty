@@ -1,10 +1,6 @@
 import os
 os.makedirs("instance", exist_ok=True)
 
-@app.before_first_request
-def initialize_database():
-    db.create_all()
-
 import random
 import json
 import base64
@@ -48,6 +44,12 @@ GMAIL_CLIENT_SECRET = os.environ.get("GMAIL_CLIENT_SECRET")
 GMAIL_REDIRECT_URI = os.environ.get("GMAIL_REDIRECT_URI")
 GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
+# --------------------------------------------------
+# AUTO INIT DATABASE
+# --------------------------------------------------
+@app.before_first_request
+def initialize_database():
+    db.create_all()
 
 # --------------------------------------------------
 # MODELI
