@@ -521,13 +521,15 @@ def run_auto():
 @app.route("/toggle_automation", methods=["POST"])
 def toggle_automation():
     enabled = is_automation_enabled()
-    set_setting("automation_enabled", "0" if enabled else "1")
+    new_value = "0" if enabled else "1"
+    set_setting("automation_enabled", new_value)
 
     flash(
         "Avtomatika je bila vklopljena." if not enabled else "Avtomatika je bila izklopljena.",
-        "info"
+        "success" if not enabled else "warning"
     )
     return redirect(url_for("index"))
+
 
 
 # --------------------------------------------------

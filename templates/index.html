@@ -109,14 +109,22 @@
 <!-- =============================== -->
 <!-- AVTOMATIZACIJA – STATUS & GUMB  -->
 <!-- =============================== -->
-<div class="card p-5 mb-8 border 
-     {{ automation_enabled and 'border-green-300 bg-green-50' or 'border-yellow-300 bg-yellow-50' }}">
+<div class="card p-5 mb-8 border rounded-lg shadow
+    {% if automation_enabled %}
+        border-green-300 bg-green-50
+    {% else %}
+        border-red-300 bg-red-50
+    {% endif %}
+">
 
     <div class="flex items-center justify-between">
 
-        <!-- LEVA STRAN -->
         <div>
             {% if automation_enabled %}
+                <p class="text-green-700 font-semibold">
+                    Status: AVTOMATIKA VKLJUČENA
+                </p>
+
                 <p class="text-sm text-gray-600 mt-1">
                     Naslednji žreb bo:
                     {% if next_auto_run %}
@@ -125,20 +133,21 @@
                         <strong>Ni podatka</strong>
                     {% endif %}
                 </p>
-                <p class="text-green-700 font-semibold mt-1">
-                    Status: AVTOMATIKA VKLJUČENA
-                </p>
             {% else %}
-                <p class="text-yellow-700 font-semibold mt-1">
+                <p class="text-red-700 font-semibold">
                     Status: AVTOMATIKA IZKLOPLJENA
                 </p>
             {% endif %}
         </div>
 
-        <!-- DESNA STRAN – GUMB -->
         <form method="POST" action="{{ url_for('toggle_automation') }}">
             <button class="px-4 py-2 rounded-lg shadow font-medium text-white
-                {{ automation_enabled and 'bg-red-500 hover:bg-red-600' or 'bg-green-500 hover:bg-green-600' }}">
+                {% if automation_enabled %}
+                    bg-red-500 hover:bg-red-600
+                {% else %}
+                    bg-green-500 hover:bg-green-600
+                {% endif %}
+            ">
                 {% if automation_enabled %}
                     Izklopi
                 {% else %}
@@ -146,9 +155,9 @@
                 {% endif %}
             </button>
         </form>
-
     </div>
 </div>
+
 
 <!-- =============================== -->
 <!-- IZBOR DEŽURNEGA (ročno)         -->
@@ -223,19 +232,17 @@
     <!-- Gumbi -->
     <div class="flex flex-col sm:flex-row gap-4">
 
-        <!-- hitri send (brez urejanja) -->
         {% if last_selection.person.email %}
         <button onclick="sendManualEmail({{ last_selection.id }})"
                 class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow text-center">
             Pošlji email
+        </button>
         {% else %}
         <p class="text-red-600 text-sm mt-2">
             Ta oseba nima nastavljenega emaila. Pošiljanje ni mogoče.
         </p>
         {% endif %}
-        </button>
 
-        <!-- urejanje v modalu -->
         <button onclick="openEmailEditModal({{ last_selection.id }})"
                 class="px-5 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow text-center">
             Uredi e-mail
@@ -245,6 +252,7 @@
 
 </div>
 {% endif %}
+
 
 <!-- =============================== -->
 <!-- VSE OSEBE                       -->
