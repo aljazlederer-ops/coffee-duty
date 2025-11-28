@@ -1,4 +1,10 @@
 import os
+os.makedirs("instance", exist_ok=True)
+
+@app.before_first_request
+def initialize_database():
+    db.create_all()
+
 import random
 import json
 import base64
