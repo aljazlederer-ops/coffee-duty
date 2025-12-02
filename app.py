@@ -29,14 +29,17 @@ from google.auth.transport.requests import Request as GoogleRequest
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
 
-# 1️⃣ Preberi DATABASE_URL iz okolja (Render ga tukaj doda)
+# Preberi DATABASE_URL iz okolja (Render doda postgres://...)
 database_url = os.environ.get("DATABASE_URL")
 
-# 2️⃣ Če obstaja → uporabi PostgreSQL
-#    Če ne → uporabi lokalni SQLite (lokalno razvijanje)
 if database_url:
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_url.replace("postgres://", "postgresql://")
+    # ⚠️ Render da postgres:// → za psycopg3 mora biti postgresql+psycopg://
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql+psycopg://", 1)
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 else:
+    # Lokalni SQLite fallback
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DB_PATH = os.path.join(BASE_DIR, "coffee_duty.db")
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
