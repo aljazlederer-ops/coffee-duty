@@ -35,8 +35,10 @@ if database_url:
     # Render gives: postgres://...
     # SQLAlchemy expects: postgresql+psycopg://
     if database_url.startswith("postgres://"):
+        database_url = "postgresql+psycopg://" + database_url[len("postgres://"):]
+    elif database_url.startswith("postgresql://"):
         database_url = database_url.replace(
-            "postgres://",
+            "postgresql://",
             "postgresql+psycopg://",
             1
         )
