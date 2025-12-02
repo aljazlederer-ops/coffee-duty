@@ -25,15 +25,26 @@ from google.auth.transport.requests import Request as GoogleRequest
 # --------------------------------------------------
 # FLASK APP + DATABASE CONFIG
 # --------------------------------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "coffee_duty.db")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+
+# 1️⃣ Preberi DATABASE_URL iz okolja (Render ga tukaj doda)
+database_url = os.environ.get("DATABASE_URL")
+
+# 2️⃣ Če obstaja → uporabi PostgreSQL
+#    Če ne → uporabi lokalni SQLite (lokalno razvijanje)
+if database_url:
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url.replace("postgres://", "postgresql://")
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DB_PATH = os.path.join(BASE_DIR, "coffee_duty.db")
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
 
 # --------------------------------------------------
 # ENV VARIABLES (Gmail + Tokens)
