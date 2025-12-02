@@ -2,7 +2,7 @@ services:
   - type: web
     name: coffee-duty
     env: python
-    region: frankfurt
+    runtime: python3.11
     buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn app:app"
     plan: free
