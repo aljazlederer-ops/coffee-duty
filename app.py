@@ -120,6 +120,13 @@ with app.app_context():
     except Exception as e:
         print("DB INIT FAILED:", e)
 
+
+# --------------------------------------------------
+# GMAIL REFRESH TOKEN – FALLBACK IZ ENV
+# --------------------------------------------------
+GMAIL_REFRESH_TOKEN_ENV = os.environ.get("GMAIL_REFRESH_TOKEN")
+
+
 # --------------------------------------------------
 # SETTINGS HELPERJI
 # --------------------------------------------------
@@ -147,20 +154,47 @@ def is_automation_enabled() -> bool:
 # --------------------------------------------------
 def _get_gmail_credentials() -> Credentials | None:
     token_json = get_setting("gmail_token")
-    if not token_json:
-        return None
 
-    data = json.loads(token_json)
-    creds = Credentials(
-        token=data["token"],
-        refresh_token=data.get("refresh_token"),
-        token_uri=data["token_uri"],
-        client_id=data["client_id"],
-        client_secret=data["client_secret"],
-        scopes=data["scopes"],
-    )
-    return creds
+    # 1) Če imamo token v bazi → super
+    if token_json:
+        data = json.loads(token_json)
+        return Credentials(
+            token=data["token"],
+            refresh_token=data.get("refresh_token") or GMAIL_REFRESH_TOKEN_ENV,
+            token_uri=data["token_uri"],
+            client_id=data["client_id"],
+            client_secret=data["client_secret"],
+            scopes=data["scopes"],
+        )
 
+    # 2) Če nimamo pa imamo REFRESH TOKEN iz env → ustvarimo minimalne creds
+    if GMAIL_REFRESH_TOKEN_ENV:
+        return Credentials(
+            token=None,
+            refresh_token=GMAIL_REFRESH_TOKEN_ENV,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=GMAIL_CLIENT_ID,
+            client_secret=GMAIL_CLIENT_SECRET,
+            scopes=GMAIL_SCOPES,
+        )
+
+    return None
+
+# --------------------------------------------------
+# ENSURE VALID GMAIL CREDENTIALS OB ZAGONU
+# --------------------------------------------------
+def _ensure_valid_gmail_credentials():
+    creds = _get_gmail_credentials()
+    if not creds:
+        return
+
+    if creds.expired or not creds.token:
+        try:
+            creds.refresh(GoogleRequest())
+            _save_gmail_credentials(creds)
+            print("✓ Gmail token refreshed ob zagonu.")
+        except Exception as e:
+            print("Gmail refresh error ob zagonu:", e)
 
 def _save_gmail_credentials(creds: Credentials):
     data = {
@@ -177,6 +211,8 @@ def _save_gmail_credentials(creds: Credentials):
 def is_gmail_connected() -> bool:
     return _get_gmail_credentials() is not None
 
+with app.app_context():
+    _ensure_valid_gmail_credentials()
 
 # --------------------------------------------------
 # GMAIL OAUTH – URL, CALLBACK, DISCONNECT
@@ -258,6 +294,16 @@ def oauth2callback():
     flash("Gmail povezava uspešno vzpostavljena. ✅", "success")
     return redirect(url_for("index"))
 
+@app.route("/gmail-status")
+def gmail_status():
+    creds = _get_gmail_credentials()
+    if not creds:
+        return "❌ Gmail NI povezan"
+    
+    if creds.expired:
+        return "⚠ Gmail povezan, a token je expired (auto-refresh bo narejen)"
+    
+    return "✅ Gmail povezan in aktiven"
 
 @app.route("/gmail/disconnect", methods=["POST"])
 def gmail_disconnect():
@@ -270,18 +316,19 @@ def gmail_disconnect():
 # POŠILJANJE EMAILA PREKO GMAIL API
 # --------------------------------------------------
 def send_email(to_email: str, subject: str, body: str) -> bool:
-    """
-    Vrne True, če je poslan, False če ni (npr. Gmail ni povezan).
-    """
     creds = _get_gmail_credentials()
     if not creds:
-        # Gmail ni konfiguriran – ne rušimo app-a, samo vrnemo False
         print("Gmail ni povezan, e-mail se ne pošlje.")
         return False
 
-    if creds.expired and creds.refresh_token:
-        creds.refresh(GoogleRequest())
-        _save_gmail_credentials(creds)
+    # 🔥 Avtomatski refresh
+    if creds.expired or not creds.token:
+        try:
+            creds.refresh(GoogleRequest())
+            _save_gmail_credentials(creds)
+        except Exception as e:
+            print("Ne morem osvežiti Gmail tokena:", e)
+            return False
 
     try:
         service = build("gmail", "v1", credentials=creds)
